@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- See Relax specification: Ghidra/Framework/SoftwareModeling/data/languages/processor_spec.rxg -->
+
+<processor_spec>
+  <programcounter register="pc"/>
+  <register_data>
+    <register name="rsp" group="Alt"/>
+    <register name="rbp" group="Alt"/>
+    <register name="rax" group="Alt"/>
+    
+  </register_data>
+  <!-- <properties>
+  	<property key="pcodeInjectLibraryClass" value="cvmdecompiler.CvmPcodeInjectLibrary"/>
+  </properties> -->
+</processor_spec>

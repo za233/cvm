@@ -1,0 +1,15 @@
+# sleigh specification file for Skeleton Processor
+#   >> see docs/languages/sleigh.htm or sleigh.pdf for Sleigh syntax
+# Other language modules (see Ghidra/Processors) may provide better examples
+# when creating a new language module.
+
+define endian=little;
+define alignment=1;
+
+define space ram type=ram_space size=8 default;
+define space plt type=ram_space size=8;
+define space header type=ram_space size=4;
+define space import type=ram_space size=4;
+define space register type=register_space size=4;
+define register offset=0 size=8 [pc rsp rbp rax];
+@include "cvm.sinc"

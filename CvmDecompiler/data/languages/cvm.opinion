@@ -1,0 +1,5 @@
+<opinions>
+	<constraint loader="Cvm BytecodeFile Loader" compilerSpecID="default">
+    		<constraint processor="Cvm"  size="64" variant="default" />
+    </constraint>
+</opinions>

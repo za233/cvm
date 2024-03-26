@@ -1,0 +1,1223 @@
+define token opcode(8)
+    op = (0, 7)
+;
+
+define token operand1(8)
+	imm1 = (0, 7)
+	bit_info = (0, 7)
+	bit_from = (0, 7)
+	bit_to = (0, 7)
+	pop_num = (0, 7)
+	cmp_flag = (0, 7)
+;
+
+define token operand2(16)
+	imm2 = (0, 15)
+	vmcall_id = (0, 15)
+;
+
+define token operand4(32)
+	imm4 = (0, 31)
+	delta = (0, 31) signed
+;
+define pcodeop vmcall;
+define token operand8(64)
+	imm8 = (0, 63)
+;
+macro op_push(x)
+{
+	rsp = rsp - 8;
+	local s:8 = rsp;
+	*[ram]:8 s = zext(x);
+}
+macro op_pop(x)
+{
+	
+	local s:8 = rsp;
+	x = *[ram]:8 s;
+	rsp = rsp + 8;
+}
+macro op_pop1(x)
+{
+	local val:8;
+	op_pop(val);
+	x = val:1;
+}
+macro op_pop2(x)
+{
+	local val:8;
+	op_pop(val);
+	x = val:2;
+}
+macro op_pop4(x)
+{
+	local val:8;
+	op_pop(val);
+	x = val:4;
+}
+
+dest: reloc is delta [reloc = inst_next + delta;]
+{
+	export *[ram]:8 reloc;
+}
+
+:load1 is op=1; bit_info=1
+{
+	local addr:8;
+	op_pop(addr);
+	local val:1;
+	val = *[ram]:1 addr;
+	op_push(val); 
+}
+:load2 is op=1; bit_info=2
+{
+	local addr:8;
+	op_pop(addr);
+	local val:2;
+	val = *[ram]:2 addr;
+	op_push(val); 
+}
+:load4 is op=1; bit_info=4
+{
+	local addr:8;
+	op_pop(addr);
+	local val:4;
+	val = *[ram]:4 addr;
+	op_push(val); 
+}
+:load8 is op=1; bit_info=8
+{
+	local addr:8;
+	op_pop(addr);
+	local val:8;
+	val = *[ram]:8 addr;
+	op_push(val); 
+}
+:store1 is op=2; bit_info=1
+{
+	local val:1;
+	op_pop1(val);
+	local addr:8;
+	op_pop(addr);
+	*[ram]:1 addr = val;
+}
+:store2 is op=2; bit_info=2
+{
+	local val:2;
+	op_pop2(val);
+	local addr:8;
+	op_pop(addr);
+	*[ram]:2 addr = val;
+}
+:store4 is op=2; bit_info=4
+{
+	local val:4;
+	op_pop4(val);
+	local addr:8;
+	op_pop(addr);
+	*[ram]:4 addr = val;
+}
+:store8 is op=2; bit_info=8
+{
+	local val:8;
+	op_pop(val);
+	local addr:8;
+	op_pop(addr);
+	*[ram]:8 addr = val;
+}
+:push1 imm1 is op=3; imm1
+{
+	local val:8 = imm1;
+	op_push(val);
+}
+:push2 imm2 is op=4; imm2
+{
+	local val:8 = imm2;
+	op_push(val);
+}
+:push4 imm4 is op=5; imm4
+{
+	local val:8 = imm4;
+	op_push(val);
+}
+:push8 imm8 is op=6; imm8
+{
+	local val:8 = imm8;
+	op_push(val);
+}
+:push_bp is op=8
+{
+	local val:8 = rbp;
+	op_push(val);
+}
+:pop pop_num is op=9; pop_num
+{
+	rsp = rsp + 8 * pop_num;
+}
+
+:add1 is op=10; bit_info=1
+{
+	local l:1;
+	local r:1;
+	local raxult:1;
+	op_pop1(r);
+	op_pop1(l);
+	raxult = l + r;
+	op_push(raxult);
+}
+:add2 is op=10; bit_info=2
+{
+	local l:2;
+	local r:2;
+	local raxult:2;
+	op_pop2(r);
+	op_pop2(l);
+	raxult = l + r;
+	op_push(raxult);
+}
+:add4 is op=10; bit_info=4
+{
+	local l:4;
+	local r:4;
+	local raxult:4;
+	op_pop4(r);
+	op_pop4(l);
+	raxult = l + r;
+	op_push(raxult);
+}
+:add8 is op=10; bit_info=8
+{
+	local l:8;
+	local r:8;
+	local raxult:8;
+	op_pop(r);
+	op_pop(l);
+	raxult = l + r;
+	op_push(raxult);
+}
+
+
+:sub1 is op=11; bit_info=1
+{
+	local l:1;
+	local r:1;
+	local raxult:1;
+	op_pop1(r);
+	op_pop1(l);
+	raxult = l - r;
+	op_push(raxult);
+}
+:sub2 is op=11; bit_info=2
+{
+	local l:2;
+	local r:2;
+	local raxult:2;
+	op_pop2(r);
+	op_pop2(l);
+	raxult = l - r;
+	op_push(raxult);
+}
+:sub4 is op=11; bit_info=4
+{
+	local l:4;
+	local r:4;
+	local raxult:4;
+	op_pop4(r);
+	op_pop4(l);
+	raxult = l - r;
+	op_push(raxult);
+}
+:sub8 is op=11; bit_info=8
+{
+	local l:8;
+	local r:8;
+	local raxult:8;
+	op_pop(r);
+	op_pop(l);
+	raxult = l - r;
+	op_push(raxult);
+}
+
+:smul1 is op=12; bit_info=1
+{
+	local l:1;
+	local r:1;
+	local raxult:1;
+	op_pop1(r);
+	op_pop1(l);
+	raxult = sext(l) * sext(r);
+	op_push(raxult);
+}
+:smul2 is op=12; bit_info=2
+{
+	local l:2;
+	local r:2;
+	local raxult:2;
+	op_pop2(r);
+	op_pop2(l);
+	raxult = sext(l) * sext(r);
+	op_push(raxult);
+}
+:smul4 is op=12; bit_info=4
+{
+	local l:4;
+	local r:4;
+	local raxult:4;
+	op_pop4(r);
+	op_pop4(l);
+	raxult = sext(l) * sext(r);
+	op_push(raxult);
+}
+:smul8 is op=12; bit_info=8
+{
+	local l:8;
+	local r:8;
+	local raxult:8;
+	op_pop(r);
+	op_pop(l);
+	raxult = sext(l) * sext(r);
+	op_push(raxult);
+}
+
+:umul1 is op=13; bit_info=1
+{
+	local l:1;
+	local r:1;
+	local raxult:1;
+	op_pop1(r);
+	op_pop1(l);
+	raxult = l * r;
+	op_push(raxult);
+}
+:umul2 is op=13; bit_info=2
+{
+	local l:2;
+	local r:2;
+	local raxult:2;
+	op_pop2(r);
+	op_pop2(l);
+	raxult = l * r;
+	op_push(raxult);
+}
+:umul4 is op=13; bit_info=4
+{
+	local l:4;
+	local r:4;
+	local raxult:4;
+	op_pop4(r);
+	op_pop4(l);
+	raxult = l * r;
+	op_push(raxult);
+}
+:umul8 is op=13; bit_info=8
+{
+	local l:8;
+	local r:8;
+	local raxult:8;
+	op_pop(r);
+	op_pop(l);
+	raxult = l * r;
+	op_push(raxult);
+}
+
+
+:sdiv1 is op=14; bit_info=1
+{
+	local l:1;
+	local r:1;
+	local raxult:1;
+	op_pop1(r);
+	op_pop1(l);
+	raxult = l s/ r;
+	op_push(raxult);
+}
+:sdiv2 is op=14; bit_info=2
+{
+	local l:2;
+	local r:2;
+	local raxult:2;
+	op_pop2(r);
+	op_pop2(l);
+	raxult = l s/ r;
+	op_push(raxult);
+}
+:sdiv4 is op=14; bit_info=4
+{
+	local l:4;
+	local r:4;
+	local raxult:4;
+	op_pop4(r);
+	op_pop4(l);
+	raxult = l s/ r;
+	op_push(raxult);
+}
+:sdiv8 is op=14; bit_info=8
+{
+	local l:8;
+	local r:8;
+	local raxult:8;
+	op_pop(r);
+	op_pop(l);
+	raxult = l s/ r;
+	op_push(raxult);
+}
+
+:udiv1 is op=15; bit_info=1
+{
+	local l:1;
+	local r:1;
+	local raxult:1;
+	op_pop1(r);
+	op_pop1(l);
+	raxult = l / r;
+	op_push(raxult);
+}
+:udiv2 is op=15; bit_info=2
+{
+	local l:2;
+	local r:2;
+	local raxult:2;
+	op_pop2(r);
+	op_pop2(l);
+	raxult = l / r;
+	op_push(raxult);
+}
+:udiv4 is op=15; bit_info=4
+{
+	local l:4;
+	local r:4;
+	local raxult:4;
+	op_pop4(r);
+	op_pop4(l);
+	raxult = l / r;
+	op_push(raxult);
+}
+:udiv8 is op=15; bit_info=8
+{
+	local l:8;
+	local r:8;
+	local raxult:8;
+	op_pop(r);
+	op_pop(l);
+	raxult = l / r;
+	op_push(raxult);
+}
+
+
+:smod1 is op=16; bit_info=1
+{
+	local l:1;
+	local r:1;
+	local raxult:1;
+	op_pop1(r);
+	op_pop1(l);
+	raxult = l s% r;
+	op_push(raxult);
+}
+:smod2 is op=16; bit_info=2
+{
+	local l:2;
+	local r:2;
+	local raxult:2;
+	op_pop2(r);
+	op_pop2(l);
+	raxult = l s% r;
+	op_push(raxult);
+}
+:smod4 is op=16; bit_info=4
+{
+	local l:4;
+	local r:4;
+	local raxult:4;
+	op_pop4(r);
+	op_pop4(l);
+	raxult = l s% r;
+	op_push(raxult);
+}
+:smod8 is op=16; bit_info=8
+{
+	local l:8;
+	local r:8;
+	local raxult:8;
+	op_pop(r);
+	op_pop(l);
+	raxult = l s% r;
+	op_push(raxult);
+}
+
+:umod1 is op=17; bit_info=1
+{
+	local l:1;
+	local r:1;
+	local raxult:1;
+	op_pop1(r);
+	op_pop1(l);
+	raxult = l % r;
+	op_push(raxult);
+}
+:umod2 is op=17; bit_info=2
+{
+	local l:2;
+	local r:2;
+	local raxult:2;
+	op_pop2(r);
+	op_pop2(l);
+	raxult = l % r;
+	op_push(raxult);
+}
+:umod4 is op=17; bit_info=4
+{
+	local l:4;
+	local r:4;
+	local raxult:4;
+	op_pop4(r);
+	op_pop4(l);
+	raxult = l % r;
+	op_push(raxult);
+}
+:umod8 is op=17; bit_info=8
+{
+	local l:8;
+	local r:8;
+	local raxult:8;
+	op_pop(r);
+	op_pop(l);
+	raxult = l % r;
+	op_push(raxult);
+}
+:and1 is op=18; bit_info=1
+{
+	local l:1;
+	local r:1;
+	local raxult:1;
+	op_pop1(r);
+	op_pop1(l);
+	raxult = l & r;
+	op_push(raxult);
+}
+:and2 is op=18; bit_info=2
+{
+	local l:2;
+	local r:2;
+	local raxult:2;
+	op_pop2(r);
+	op_pop2(l);
+	raxult = l & r;
+	op_push(raxult);
+}
+:and4 is op=18; bit_info=4
+{
+	local l:4;
+	local r:4;
+	local raxult:4;
+	op_pop4(r);
+	op_pop4(l);
+	raxult = l & r;
+	op_push(raxult);
+}
+:and8 is op=18; bit_info=8
+{
+	local l:8;
+	local r:8;
+	local raxult:8;
+	op_pop(r);
+	op_pop(l);
+	raxult = l & r;
+	op_push(raxult);
+}
+:or1 is op=19; bit_info=1
+{
+	local l:1;
+	local r:1;
+	local raxult:1;
+	op_pop1(r);
+	op_pop1(l);
+	raxult = l | r;
+	op_push(raxult);
+}
+:or2 is op=19; bit_info=2
+{
+	local l:2;
+	local r:2;
+	local raxult:2;
+	op_pop2(r);
+	op_pop2(l);
+	raxult = l | r;
+	op_push(raxult);
+}
+:or4 is op=19; bit_info=4
+{
+	local l:4;
+	local r:4;
+	local raxult:4;
+	op_pop4(r);
+	op_pop4(l);
+	raxult = l | r;
+	op_push(raxult);
+}
+:or8 is op=19; bit_info=8
+{
+	local l:8;
+	local r:8;
+	local raxult:8;
+	op_pop(r);
+	op_pop(l);
+	raxult = l | r;
+	op_push(raxult);
+}
+:xor1 is op=20; bit_info=1
+{
+	local l:1;
+	local r:1;
+	local raxult:1;
+	op_pop1(r);
+	op_pop1(l);
+	raxult = l ^ r;
+	op_push(raxult);
+}
+:xor2 is op=20; bit_info=2
+{
+	local l:2;
+	local r:2;
+	local raxult:2;
+	op_pop2(r);
+	op_pop2(l);
+	raxult = l ^ r;
+	op_push(raxult);
+}
+:xor4 is op=20; bit_info=4
+{
+	local l:4;
+	local r:4;
+	local raxult:4;
+	op_pop4(r);
+	op_pop4(l);
+	raxult = l ^ r;
+	op_push(raxult);
+}
+:xor8 is op=20; bit_info=8
+{
+	local l:8;
+	local r:8;
+	local raxult:8;
+	op_pop(r);
+	op_pop(l);
+	raxult = l ^ r;
+	op_push(raxult);
+}
+:shl1 is op=21; bit_info=1
+{
+	local l:1;
+	local r:1;
+	local raxult:1;
+	op_pop1(r);
+	op_pop1(l);
+	raxult = l << r;
+	op_push(raxult);
+}
+:shl2 is op=21; bit_info=2
+{
+	local l:2;
+	local r:2;
+	local raxult:2;
+	op_pop2(r);
+	op_pop2(l);
+	raxult = l << r;
+	op_push(raxult);
+}
+:shl4 is op=21; bit_info=4
+{
+	local l:4;
+	local r:4;
+	local raxult:4;
+	op_pop4(r);
+	op_pop4(l);
+	raxult = l << r;
+	op_push(raxult);
+}
+:shl8 is op=21; bit_info=8
+{
+	local l:8;
+	local r:8;
+	local raxult:8;
+	op_pop(r);
+	op_pop(l);
+	raxult = l << r;
+	op_push(raxult);
+}
+:lshr1 is op=22; bit_info=1
+{
+	local l:1;
+	local r:1;
+	local raxult:1;
+	op_pop1(r);
+	op_pop1(l);
+	raxult = l >> r;
+	op_push(raxult);
+}
+:lshr2 is op=22; bit_info=2
+{
+	local l:2;
+	local r:2;
+	local raxult:2;
+	op_pop2(r);
+	op_pop2(l);
+	raxult = l >> r;
+	op_push(raxult);
+}
+:lshr4 is op=22; bit_info=4
+{
+	local l:4;
+	local r:4;
+	local raxult:4;
+	op_pop4(r);
+	op_pop4(l);
+	raxult = l >> r;
+	op_push(raxult);
+}
+:lshr8 is op=22; bit_info=8
+{
+	local l:8;
+	local r:8;
+	local raxult:8;
+	op_pop(r);
+	op_pop(l);
+	raxult = l >> r;
+	op_push(raxult);
+}
+:ashr1 is op=23; bit_info=1
+{
+	local l:1;
+	local r:1;
+	local raxult:1;
+	op_pop1(r);
+	op_pop1(l);
+	raxult = l s>> r;
+	op_push(raxult);
+}
+:ashr2 is op=23; bit_info=2
+{
+	local l:2;
+	local r:2;
+	local raxult:2;
+	op_pop2(r);
+	op_pop2(l);
+	raxult = l s>> r;
+	op_push(raxult);
+}
+:ashr4 is op=23; bit_info=4
+{
+	local l:4;
+	local r:4;
+	local raxult:4;
+	op_pop4(r);
+	op_pop4(l);
+	raxult = l s>> r;
+	op_push(raxult);
+}
+:ashr8 is op=23; bit_info=8
+{
+	local l:8;
+	local r:8;
+	local raxult:8;
+	op_pop(r);
+	op_pop(l);
+	raxult = l s>> r;
+	op_push(raxult);
+}
+:neg1 is op=24; bit_info=1
+{
+	local l:1;
+	op_pop1(l);
+	local raxult:1 = ~l;
+	op_push(raxult);
+}
+:neg2 is op=24; bit_info=2
+{
+	local l:2;
+	op_pop2(l);
+	local raxult:2 = ~l;
+	op_push(raxult);
+}
+:neg4 is op=24; bit_info=4
+{
+	local l:4;
+	op_pop4(l);
+	local raxult:4 = ~l;
+	op_push(raxult);
+}
+:neg8 is op=24; bit_info=8
+{
+	local l:8;
+	op_pop(l);
+	local raxult:8 = ~l;
+	op_push(raxult);
+}
+:not1 is op=25; bit_info=1
+{
+	local l:1;
+	op_pop1(l);
+	local raxult:1 = 0 - l;
+	op_push(raxult);
+}
+:not2 is op=25; bit_info=2
+{
+	local l:2;
+	op_pop2(l);
+	local raxult:2 = 0 - l;
+	op_push(raxult);
+}
+:not4 is op=25; bit_info=4
+{
+	local l:4;
+	op_pop4(l);
+	local raxult:4 = 0 - l;
+	op_push(raxult);
+}
+:not8 is op=25; bit_info=8
+{
+	local l:8;
+	op_pop(l);
+	local raxult:8 = 0 - l;
+	op_push(raxult);
+}
+:sext1_2 is op=26; bit_from=1; bit_to=2
+{
+	
+	local val_from:1;
+	op_pop1(val_from);
+	local val_to:2 = sext(val_from);
+	op_push(val_to);
+}
+:sext1_4 is op=26; bit_from=1; bit_to=4
+{
+	local val_from:1;
+	op_pop1(val_from);
+	local val_to:4 = sext(val_from);
+	op_push(val_to);
+}
+:sext1_8 is op=26; bit_from=1; bit_to=8
+{
+	local val_from:1;
+	op_pop1(val_from);
+	local val_to:8 = sext(val_from);
+	op_push(val_to);
+}
+:sext2_4 is op=26; bit_from=2; bit_to=4
+{
+	local val_from:2;
+	op_pop2(val_from);
+	local val_to:4 = sext(val_from);
+	op_push(val_to);
+}
+:sext2_8  is op=26; bit_from=2; bit_to=8
+{
+	local val_from:2;
+	op_pop2(val_from);
+	local val_to:8 = sext(val_from);
+	op_push(val_to);
+}
+:sext4_8  is op=26; bit_from=4; bit_to=8
+{
+	local val_from:4;
+	op_pop4(val_from);
+	local val_to:8 = sext(val_from);
+	op_push(val_to);
+}
+:st_arg is op=27
+{
+	local val:8;
+	op_pop(val);
+	rsp = rsp - 8;
+	local stack_addr:8 = rsp;
+	*[ram]:8 stack_addr = val;
+	
+}
+:pop_arg pop_num is op=28; pop_num
+{
+	rsp = rsp + 8 * pop_num;
+}
+
+:call dest is op=29; dest
+{
+	rsp = rsp - 8;
+	local stack_addr:8 = rsp;
+	*[ram]:8 stack_addr = inst_next; 
+	call dest;
+	local val:8 = rax;
+	op_push(val);
+}
+:ret is op=30
+{
+	
+	local stack_addr:8 = rsp;
+	local ret_addr:8 = *[ram]:8 stack_addr;
+	rsp = rsp + 8;
+	pc = ret_addr;
+	return [ret_addr];
+}
+:br dest is op=31; dest
+{
+	local val:8;
+	op_pop(val);
+	if(val != 0)
+		goto dest;
+}
+:jmp dest is op=32; dest
+{
+	goto dest;
+}
+:cmp_eq1 is op=33; bit_info=1; cmp_flag=0
+{
+	local l:1;
+	local r:1;
+	op_pop1(r);
+	op_pop1(l);
+	op_push(l == r);
+}
+:cmp_eq2 is op=33; bit_info=2; cmp_flag=0
+{
+	local l:2;
+	local r:2;
+	op_pop2(r);
+	op_pop2(l);
+	op_push(l == r);
+}
+:cmp_eq4 is op=33; bit_info=4; cmp_flag=0
+{
+	local l:4;
+	local r:4;
+	op_pop4(r);
+	op_pop4(l);
+	op_push(l == r);
+}
+:cmp_eq8 is op=33; bit_info=8; cmp_flag=0
+{
+	local l:8;
+	local r:8;
+	op_pop(r);
+	op_pop(l);
+	op_push(l == r);
+}
+:cmp_neq1 is op=33; bit_info=1; cmp_flag=1
+{
+	local l:1;
+	local r:1;
+	op_pop1(r);
+	op_pop1(l);
+	op_push(l != r);
+}
+:cmp_neq2 is op=33; bit_info=2; cmp_flag=1
+{
+	local l:2;
+	local r:2;
+	op_pop2(r);
+	op_pop2(l);
+	op_push(l != r);
+}
+:cmp_neq4 is op=33; bit_info=4; cmp_flag=1
+{
+	local l:4;
+	local r:4;
+	op_pop4(r);
+	op_pop4(l);
+	op_push(l != r);
+}
+:cmp_neq8 is op=33; bit_info=8; cmp_flag=1
+{
+	local l:8;
+	local r:8;
+	op_pop(r);
+	op_pop(l);
+	op_push(l != r);
+}
+:cmp_le1 is op=33; bit_info=1; cmp_flag=2
+{
+	local l:1;
+	local r:1;
+	op_pop1(r);
+	op_pop1(l);
+	op_push(l <= r);
+}
+:cmp_le2 is op=33; bit_info=2; cmp_flag=2
+{
+	local l:2;
+	local r:2;
+	op_pop2(r);
+	op_pop2(l);
+	op_push(l <= r);
+}
+:cmp_le4 is op=33; bit_info=4; cmp_flag=2
+{
+	local l:4;
+	local r:4;
+	op_pop4(r);
+	op_pop4(l);
+	op_push(l <= r);
+}
+:cmp_le8 is op=33; bit_info=8; cmp_flag=2
+{
+	local l:8;
+	local r:8;
+	op_pop(r);
+	op_pop(l);
+	op_push(l <= r);
+}
+:cmp_lt1 is op=33; bit_info=1; cmp_flag=3
+{
+	local l:1;
+	local r:1;
+	op_pop1(r);
+	op_pop1(l);
+	op_push(l < r);
+}
+:cmp_lt2 is op=33; bit_info=2; cmp_flag=3
+{
+	local l:2;
+	local r:2;
+	op_pop2(r);
+	op_pop2(l);
+	op_push(l < r);
+}
+:cmp_lt4 is op=33; bit_info=4; cmp_flag=3
+{
+	local l:4;
+	local r:4;
+	op_pop4(r);
+	op_pop4(l);
+	op_push(l < r);
+}
+:cmp_lt8 is op=33; bit_info=8; cmp_flag=3
+{
+	local l:8;
+	local r:8;
+	op_pop(r);
+	op_pop(l);
+	op_push(l < r);
+}
+:cmp_ge1 is op=33; bit_info=1; cmp_flag=4
+{
+	local l:1;
+	local r:1;
+	op_pop1(r);
+	op_pop1(l);
+	op_push(l >= r);
+}
+:cmp_ge2 is op=33; bit_info=2; cmp_flag=4
+{
+	local l:2;
+	local r:2;
+	op_pop2(r);
+	op_pop2(l);
+	op_push(l >= r);
+}
+:cmp_ge4 is op=33; bit_info=4; cmp_flag=4
+{
+	local l:4;
+	local r:4;
+	op_pop4(r);
+	op_pop4(l);
+	op_push(l >= r);
+}
+:cmp_ge8 is op=33; bit_info=8; cmp_flag=4
+{
+	local l:8;
+	local r:8;
+	op_pop(r);
+	op_pop(l);
+	op_push(l >= r);
+}
+:cmp_gt1 is op=33; bit_info=1; cmp_flag=5
+{
+	local l:1;
+	local r:1;
+	op_pop1(r);
+	op_pop1(l);
+	op_push(l > r);
+}
+:cmp_gt2 is op=33; bit_info=2; cmp_flag=5
+{
+	local l:2;
+	local r:2;
+	op_pop2(r);
+	op_pop2(l);
+	op_push(l > r);
+}
+:cmp_gt4 is op=33; bit_info=4; cmp_flag=5
+{
+	local l:4;
+	local r:4;
+	op_pop4(r);
+	op_pop4(l);
+	op_push(l > r);
+}
+:cmp_gt8 is op=33; bit_info=8; cmp_flag=5
+{
+	local l:8;
+	local r:8;
+	op_pop(r);
+	op_pop(l);
+	op_push(l > r);
+}
+:cmp_sle1 is op=33; bit_info=1; cmp_flag=6
+{
+	local l:1;
+	local r:1;
+	op_pop1(r);
+	op_pop1(l);
+	op_push(l s<= r );
+}
+:cmp_sle2 is op=33; bit_info=2; cmp_flag=6
+{
+	local l:2;
+	local r:2;
+	op_pop2(r);
+	op_pop2(l);
+	op_push(l s<= r );
+}
+:cmp_sle4 is op=33; bit_info=4; cmp_flag=6
+{
+	local l:4;
+	local r:4;
+	op_pop4(r);
+	op_pop4(l);
+	op_push(l s<= r );
+}
+:cmp_sle8 is op=33; bit_info=8; cmp_flag=6
+{
+	local l:8;
+	local r:8;
+	op_pop(r);
+	op_pop(l);
+	op_push(l s<= r );
+}
+:cmp_slt1 is op=33; bit_info=1; cmp_flag=7
+{
+	local l:1;
+	local r:1;
+	op_pop1(r);
+	op_pop1(l);
+	op_push(l s< r);
+}
+:cmp_slt2 is op=33; bit_info=2; cmp_flag=7
+{
+	local l:2;
+	local r:2;
+	op_pop2(r);
+	op_pop2(l);
+	op_push(l s< r);
+}
+:cmp_slt4 is op=33; bit_info=4; cmp_flag=7
+{
+	local l:4;
+	local r:4;
+	op_pop4(r);
+	op_pop4(l);
+	op_push(l s< r);
+}
+:cmp_slt8 is op=33; bit_info=8; cmp_flag=7
+{
+	local l:8;
+	local r:8;
+	op_pop(r);
+	op_pop(l);
+	op_push(l s< r);
+}
+:cmp_sge1 is op=33; bit_info=1; cmp_flag=8
+{
+	local l:1;
+	local r:1;
+	op_pop1(r);
+	op_pop1(l);
+	op_push(l s>= r );
+}
+:cmp_sge2 is op=33; bit_info=2; cmp_flag=8
+{
+	local l:2;
+	local r:2;
+	op_pop2(r);
+	op_pop2(l);
+	op_push(l s>= r );
+}
+:cmp_sge4 is op=33; bit_info=4; cmp_flag=8
+{
+	local l:4;
+	local r:4;
+	op_pop4(r);
+	op_pop4(l);
+	op_push(l s>= r );
+}
+:cmp_sge8 is op=33; bit_info=8; cmp_flag=8
+{
+	local l:8;
+	local r:8;
+	op_pop(r);
+	op_pop(l);
+	op_push(l s>= r );
+}
+:cmp_sgt1 is op=33; bit_info=1; cmp_flag=9
+{
+	local l:1;
+	local r:1;
+	local val:8;
+	op_pop1(r);
+	op_pop1(l);
+	op_push(l s> r);
+}
+:cmp_sgt2 is op=33; bit_info=2; cmp_flag=9
+{
+	local l:2;
+	local r:2;
+	op_pop2(r);
+	op_pop2(l);
+	op_push(l s> r);
+}
+:cmp_sgt4 is op=33; bit_info=4; cmp_flag=9
+{
+	local l:4;
+	local r:4;
+	op_pop4(r);
+	op_pop4(l);
+	op_push(l s> r);
+}
+:cmp_sgt8 is op=33; bit_info=8; cmp_flag=9
+{
+	local l:8;
+	local r:8;
+	op_pop(r);
+	op_pop(l);
+	op_push(l s> r);
+}
+:alloc imm4 is op=34; imm4
+{
+	rsp = rsp - imm4;
+}
+:enter is op=35
+{
+	rsp = rsp - 8;
+	local stack_addr:8 = rsp;
+	*[ram]:8 stack_addr = rbp; 
+	rbp = rsp;
+}
+:leave is op=36
+{
+	local val:8;
+	op_pop(val);
+	rax = val;
+	rsp = rbp;
+	local stack_addr:8 = rsp;
+	rbp = *[ram]:8 stack_addr;
+	rsp = rsp + 8;
+	
+}
+:vmcall vmcall_id is op=37; vmcall_id
+{
+	local val:8 = vmcall_id;
+	local addr:8 = vmcall_id * 8;
+	rsp = rsp - 8;
+	local stack_addr:8 = rsp;
+	*[ram]:8 stack_addr = inst_next; 
+	call [*[plt]:8 addr];
+	val = rax;
+	op_push(val);
+}

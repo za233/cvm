@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- See Relax specification: Ghidra/Framework/SoftwareModeling/data/languages/language_definitions.rxg -->
+
+<language_definitions>
+
+   <language processor="Cvm"
+            endian="little"
+            size="64"
+            variant="default"
+            version="1.0"
+            slafile="cvm.sla"
+            processorspec="cvm.pspec"
+            id="cvm:LE:64:default">
+    <description>Cvm</description>
+    <compiler name="default" spec="cvm.cspec" id="default"/>
+  </language> 
+</language_definitions>
